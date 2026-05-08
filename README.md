@@ -4,7 +4,7 @@ A self-contained, browser-based operations dashboard for **S&I Urban Designers S
 
 ## Live Site
 
-Hosted via GitHub Pages:  
+Hosted via Vercel:  
 **https://[your-github-username].github.io/S-I-Operating-System-Test-Site/**
 
 ---
@@ -54,8 +54,8 @@ Hosted via GitHub Pages:
 | Language | Plain HTML + CSS + JavaScript (no framework) |
 | Charts | Chart.js 4.4.0 (CDN) |
 | Fonts | DM Sans + Sora (Google Fonts CDN) |
-| Storage | Browser localStorage |
-| Hosting | GitHub Pages |
+| Storage | Firebase Realtime Database |
+| Hosting | Vercel |
 
 ---
 
