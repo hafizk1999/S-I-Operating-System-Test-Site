@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S&amp;I Urban Designers — Operations Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --cr:#C8102E;--crh:#A50D26;--dk:#1C1C1E;--wh:#FFFFFF;--off:#F5F5F7;
+  --gr:#8E8E93;--bd:#E5E5EA;--bl:#007AFF;--gn:#34C759;--or:#FF9500;
+  --rd:#FF3B30;--pu:#AF52DE;
+  --disp:'Sora',sans-serif;--body:'DM Sans',sans-serif;
+  --s1:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --s2:0 4px 16px rgba(0,0,0,.09);--s3:0 12px 36px rgba(0,0,0,.13);
+  --r:14px;--rs:9px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--body);background:var(--off);color:var(--dk);min-height:100vh;}
+
+/* HEADER */
+.hdr{background:var(--wh);border-bottom:1px solid var(--bd);padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;box-shadow:var(--s1);}
+.logo{display:flex;align-items:center;gap:11px;}
+.lmark{width:38px;height:38px;background:var(--cr);border-radius:9px;display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--disp);font-size:13px;font-weight:800;letter-spacing:-.3px;flex-shrink:0;}
+.lname{font-family:var(--disp);font-size:15px;font-weight:700;letter-spacing:-.3px;line-height:1.2;}
+.lsub{font-size:11px;color:var(--gr);}
+.hdr-r{display:flex;align-items:center;gap:10px;}
+.dchip{font-size:12px;color:var(--gr);background:var(--off);padding:5px 13px;border-radius:20px;border:1px solid var(--bd);}
+
+/* NAV */
+.nav{background:var(--wh);border-bottom:1px solid var(--bd);padding:0 32px;display:flex;}
+.tab{padding:15px 20px;font-size:13px;font-weight:500;color:var(--gr);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .2s;display:flex;align-items:center;gap:6px;user-select:none;white-space:nowrap;}
+.tab:hover{color:var(--dk);}
+.tab.active{color:var(--cr);border-bottom-color:var(--cr);font-weight:600;}
+
+/* PAGES */
+.page{display:none;padding:28px 32px;max-width:1440px;margin:0 auto;}
+.page.active{display:block;}
+
+/* SECTION HEADER */
+.sec-hd{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:20px;}
+.sec-tt{font-family:var(--disp);font-size:22px;font-weight:800;letter-spacing:-.6px;}
+.sec-sb{font-size:12px;color:var(--gr);margin-top:3px;}
+
+/* ALERT BANNER */
+.alert{background:#FFF5F5;border:1px solid #FECACA;border-radius:var(--rs);padding:12px 16px;margin-bottom:18px;display:none;gap:10px;align-items:flex-start;}
+.alert.on{display:flex;}
+.alert-ico{font-size:16px;flex-shrink:0;margin-top:1px;}
+.alert-tt{font-size:13px;font-weight:600;color:#9B1C1C;margin-bottom:3px;}
+.alert-body{font-size:12px;color:#B91C1C;line-height:1.75;}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px;}
+.kpi{background:var(--wh);border-radius:var(--r);padding:20px 22px 18px;box-shadow:var(--s1);border:1px solid var(--bd);position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;cursor:default;}
+.kpi:hover{box-shadow:var(--s2);transform:translateY(-2px);}
+.kpi::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;}
+.kpi.kb::before{background:var(--bl);}
+.kpi.ko::before{background:var(--or);}
+.kpi.kg::before{background:var(--gn);}
+.kpi.kr::before{background:var(--cr);}
+.kpi.kp::before{background:var(--pu);}
+.kpi-lb{font-size:10px;font-weight:600;letter-spacing:.7px;text-transform:uppercase;color:var(--gr);margin-bottom:8px;}
+.kpi-vl{font-family:var(--disp);font-size:32px;font-weight:800;letter-spacing:-1.2px;line-height:1;}
+.kpi-vl.sm{font-size:20px;letter-spacing:-.5px;}
+.kpi-mt{font-size:11px;color:var(--gr);margin-top:5px;}
+
+/* LAYOUT GRIDS */
+.three-col{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:16px;margin-bottom:20px;}
+.two-col{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:20px;}
+
+/* CARD */
+.card{background:var(--wh);border-radius:var(--r);padding:22px;box-shadow:var(--s1);border:1px solid var(--bd);}
+.ctit{font-size:13px;font-weight:600;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;}
+.ctit-sm{font-size:11px;font-weight:400;color:var(--gr);}
+
+/* DONUT */
+.cw{position:relative;display:flex;align-items:center;justify-content:center;height:190px;}
+.cw-cnt{position:absolute;text-align:center;pointer-events:none;}
+.cw-n{font-family:var(--disp);font-size:28px;font-weight:800;letter-spacing:-1px;}
+.cw-l{font-size:11px;color:var(--gr);}
+.legend{display:flex;gap:14px;justify-content:center;margin-top:12px;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:5px;font-size:12px;}
+.ldot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* STAT ROW */
+.srow{display:flex;gap:10px;margin-top:16px;}
+.sbox{flex:1;background:var(--off);border:1px solid var(--bd);border-radius:9px;padding:10px 12px;text-align:center;}
+.sn{font-family:var(--disp);font-size:22px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.sl{font-size:10px;color:var(--gr);margin-top:2px;}
+
+/* DIVISION TABLE */
+.dtbl{width:100%;border-collapse:collapse;}
+.dtbl th{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--gr);padding:0 4px 10px 0;text-align:left;}
+.dtbl th:not(:first-child){text-align:right;}
+.dtbl td{font-size:12px;padding:7px 4px 7px 0;border-top:1px solid var(--bd);vertical-align:middle;}
+.dtbl td:not(:first-child){text-align:right;}
+.dtbl tr{cursor:pointer;}
+.dtbl tr:hover td{color:var(--cr);}
+.dn{font-weight:600;font-size:11.5px;line-height:1.3;}
+
+/* PROJECT LIST */
+.pr{display:flex;align-items:flex-start;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bd);cursor:pointer;transition:all .15s;gap:12px;}
+.pr:last-child{border-bottom:none;}
+.pr:hover{background:var(--off);margin:0 -8px;padding:11px 8px;border-radius:8px;}
+.pn{font-size:13px;font-weight:600;}
+.pm{font-size:11px;color:var(--gr);margin-top:2px;}
+.pr-r{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.pv{font-size:12px;color:var(--gr);white-space:nowrap;}
+.pg-bg{height:5px;background:var(--off);border-radius:3px;overflow:hidden;width:100px;margin-top:5px;}
+.pg-bar{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.34,1.56,.64,1);}
+.pg-lbl{font-size:10px;color:var(--gr);margin-top:2px;}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
+.pill.active{background:#EAF4FF;color:#0055CC;}
+.pill.at-risk{background:#FFF3E0;color:#B45309;}
+.pill.completed{background:#E8F5E9;color:#166534;}
+.pill.submitted{background:#EAF4FF;color:#0055CC;}
+.pill.won{background:#E8F5E9;color:#166534;}
+.pill.lost{background:#FFEBEE;color:#9B1C1C;}
+.pill.pending{background:#FFF3E0;color:#B45309;}
+.pill.withdrawn{background:#F3E5F5;color:#581C87;}
+
+/* TOOLBAR */
+.toolbar{display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+.sb{position:relative;flex:1;min-width:200px;}
+.sb input{width:100%;padding:9px 12px 9px 34px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:var(--body);font-size:13px;color:var(--dk);background:var(--wh);outline:none;transition:border-color .2s;}
+.sb input:focus{border-color:var(--cr);}
+.sb-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--gr);}
+.fsel{padding:9px 11px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:var(--body);font-size:13px;color:var(--dk);background:var(--wh);outline:none;cursor:pointer;}
+.fsel:focus{border-color:var(--cr);}
+.fdate{padding:8px 10px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:var(--body);font-size:12px;color:var(--dk);background:var(--wh);outline:none;}
+.fdate:focus{border-color:var(--cr);}
+
+/* BUTTONS */
+.btn-p{padding:9px 16px;background:var(--cr);color:#fff;border:none;border-radius:var(--rs);font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+.btn-p:hover{background:var(--crh);transform:translateY(-1px);box-shadow:0 4px 14px rgba(200,16,46,.3);}
+.btn-g{padding:8px 13px;background:var(--wh);color:var(--gr);border:1px solid var(--bd);border-radius:var(--rs);font-family:var(--body);font-size:12px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.btn-g:hover{border-color:var(--dk);color:var(--dk);}
+.btn-ex{padding:8px 13px;background:var(--wh);color:#166534;border:1px solid #34C759;border-radius:var(--rs);font-family:var(--body);font-size:12px;cursor:pointer;transition:background .2s;white-space:nowrap;}
+.btn-ex:hover{background:#E8F5E9;}
+
+/* TABLE */
+.twrap{background:var(--wh);border-radius:var(--r);border:1px solid var(--bd);box-shadow:var(--s1);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead th{background:var(--off);padding:10px 14px;text-align:left;font-size:10px;font-weight:600;color:var(--gr);letter-spacing:.6px;text-transform:uppercase;border-bottom:1px solid var(--bd);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s;}
+thead th:hover{color:var(--dk);}
+thead th.asc::after{content:' ▲';font-size:9px;opacity:.7;}
+thead th.desc::after{content:' ▼';font-size:9px;opacity:.7;}
+tbody tr{border-bottom:1px solid var(--bd);transition:background .12s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#FAFAFA;}
+tbody td{padding:12px 14px;font-size:13px;vertical-align:middle;}
+.tdn{font-weight:600;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tdc{color:var(--gr);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.tdv{font-weight:700;font-family:var(--disp);font-size:12px;text-align:right;white-space:nowrap;}
+.tdr{font-size:12px;color:var(--gr);max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.abt{padding:4px 9px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;border:none;transition:all .15s;}
+.abt-e{background:var(--off);color:var(--dk);}
+.abt-e:hover{background:var(--bd);}
+.abt-d{background:#FFEBEE;color:#9B1C1C;}
+.abt-d:hover{background:#FECACA;}
+.dl-r{color:var(--rd);}
+.dl-a{color:#B45309;}
+
+/* ANALYTICS */
+.a-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.as{background:var(--wh);border:1px solid var(--bd);border-radius:var(--r);padding:18px 20px;box-shadow:var(--s1);}
+.as-lb{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--gr);margin-bottom:7px;}
+.as-vl{font-family:var(--disp);font-size:24px;font-weight:800;letter-spacing:-1px;line-height:1;}
+.as-sb{font-size:11px;color:var(--gr);margin-top:4px;}
+.ctall{height:260px;position:relative;}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px 20px;color:var(--gr);}
+.em-ic{font-size:38px;margin-bottom:10px;}
+.em-tt{font-size:14px;font-weight:600;color:var(--dk);}
+.em-sb{font-size:12px;margin-top:3px;}
+
+/* OVERLAY / MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:300;align-items:flex-start;justify-content:flex-end;}
+.overlay.open{display:flex;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.modal{background:var(--wh);width:500px;height:100vh;overflow-y:auto;box-shadow:-8px 0 48px rgba(0,0,0,.14);animation:si .3s cubic-bezier(.34,1.2,.64,1);}
+@keyframes si{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.mhd{padding:22px 26px 18px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--wh);z-index:1;}
+.mtt{font-family:var(--disp);font-size:17px;font-weight:700;letter-spacing:-.4px;}
+.mcl{width:30px;height:30px;border-radius:50%;background:var(--off);border:none;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--gr);}
+.mcl:hover{background:var(--bd);color:var(--dk);}
+.mbd{padding:20px 26px;}
+.mft{padding:16px 26px;border-top:1px solid var(--bd);display:flex;gap:10px;position:sticky;bottom:0;background:var(--wh);}
+
+/* FORM */
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:12px;font-weight:600;margin-bottom:5px;}
+.fl span{color:var(--cr);}
+.fi,.fs,.fta{width:100%;padding:9px 12px;border:1.5px solid var(--bd);border-radius:var(--rs);font-family:var(--body);font-size:13px;color:var(--dk);background:var(--wh);outline:none;transition:border-color .2s,box-shadow .2s;}
+.fi:focus,.fs:focus,.fta:focus{border-color:var(--cr);box-shadow:0 0 0 3px rgba(200,16,46,.08);}
+.fta{resize:vertical;min-height:70px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.bc{flex:1;padding:10px;background:var(--off);border:1px solid var(--bd);border-radius:var(--rs);font-family:var(--body);font-size:13px;cursor:pointer;}
+.bc:hover{background:var(--bd);}
+.bs{flex:2;padding:10px;background:var(--cr);color:#fff;border:none;border-radius:var(--rs);font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;}
+.bs:hover{background:var(--crh);}
+.bdel{width:100%;padding:9px;border:1px solid #FECACA;border-radius:9px;background:#FFF5F5;color:#9B1C1C;font-size:13px;font-weight:600;cursor:pointer;margin-top:12px;}
+.bdel:hover{background:#FECACA;}
+.rwrap{display:flex;align-items:center;gap:10px;}
+.rwrap input[type=range]{flex:1;accent-color:var(--cr);}
+.rval{font-size:13px;font-weight:600;min-width:36px;text-align:right;color:var(--cr);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:11px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;box-shadow:var(--s3);pointer-events:none;background:var(--dk);color:#fff;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.ok{background:#166534;}
+.toast.err{background:#9B1C1C;}
+
+/* RESPONSIVE */
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr);}.three-col{grid-template-columns:1fr 1.3fr;}.a-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:960px){.kpi-grid{grid-template-columns:1fr 1fr;}.three-col{grid-template-columns:1fr;}.two-col{grid-template-columns:1fr;}.a-grid{grid-template-columns:1fr 1fr;}.modal{width:100%;}.page{padding:20px 16px;}.hdr,.nav{padding:0 16px;}}
+@media(max-width:600px){.frow{grid-template-columns:1fr;}.kpi-grid{grid-template-columns:1fr;}.a-grid{grid-template-columns:1fr 1fr;}.toolbar>*{flex:none;width:100%;}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo">
+    <div class="lmark">S&amp;I</div>
+    <div>
+      <div class="lname">S&amp;I Urban Designers</div>
+      <div class="lsub">Operations Dashboard</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <span class="dchip" id="hDate"></span>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="tab active" onclick="gotoPage('director')" id="tab-director">📊 Director Dashboard</div>
+  <div class="tab" onclick="gotoPage('tender')" id="tab-tender">📋 Tender Management</div>
+  <div class="tab" onclick="gotoPage('analytics')" id="tab-analytics">📈 Analytics</div>
+</nav>
+
+<!-- ═══ PAGE 1: DIRECTOR ═══ -->
+<div class="page active" id="page-director">
+  <div class="alert" id="alertBanner">
+    <div class="alert-ico">⚠️</div>
+    <div>
+      <div class="alert-tt">Overdue Tender Deadlines</div>
+      <div class="alert-body" id="alertItems"></div>
+    </div>
+  </div>
+
+  <div class="sec-hd">
+    <div><div class="sec-tt">Director Overview</div><div class="sec-sb">Live summary · All divisions · S&amp;I Urban Designers Sdn Bhd</div></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-g" onclick="openProjModal(null)">＋ Add Project</button>
+      <button class="btn-g" onclick="refreshDir()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi kb"><div class="kpi-lb">Active Projects</div><div class="kpi-vl" id="k-active">—</div><div class="kpi-mt">Currently in progress</div></div>
+    <div class="kpi ko"><div class="kpi-lb">At-Risk</div><div class="kpi-vl" id="k-risk">—</div><div class="kpi-mt">Needs attention</div></div>
+    <div class="kpi kg"><div class="kpi-lb">Completed</div><div class="kpi-vl" id="k-done">—</div><div class="kpi-mt">All time</div></div>
+    <div class="kpi kr"><div class="kpi-lb">Tender Pipeline</div><div class="kpi-vl sm" id="k-pipe">—</div><div class="kpi-mt">Total value (RM)</div></div>
+    <div class="kpi kp"><div class="kpi-lb">Upcoming Deadlines</div><div class="kpi-vl" id="k-dead">—</div><div class="kpi-mt">Next 30 days</div></div>
+  </div>
+
+  <div class="three-col">
+    <div class="card">
+      <div class="ctit">Project Status</div>
+      <div class="cw">
+        <canvas id="cDonut" style="max-width:188px;max-height:188px;"></canvas>
+        <div class="cw-cnt"><div class="cw-n" id="totPrj">—</div><div class="cw-l">Projects</div></div>
+      </div>
+      <div class="legend">
+        <div class="leg"><div class="ldot" style="background:#007AFF"></div>Active</div>
+        <div class="leg"><div class="ldot" style="background:#FF9500"></div>At-Risk</div>
+        <div class="leg"><div class="ldot" style="background:#34C759"></div>Done</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctit">Tender Pipeline</div>
+      <div style="height:155px;"><canvas id="cPipe"></canvas></div>
+      <div class="srow">
+        <div class="sbox"><div class="sn" style="color:#34C759" id="s-wr">—%</div><div class="sl">Win Rate</div></div>
+        <div class="sbox"><div class="sn" style="color:var(--cr)" id="s-tot">—</div><div class="sl">Total</div></div>
+        <div class="sbox"><div class="sn" style="color:var(--bl);font-size:15px;" id="s-val">—</div><div class="sl">Pipeline Value</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ctit">Division Performance <span class="ctit-sm">Click to filter</span></div>
+      <div id="divTbl"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ctit">All Projects <span class="ctit-sm">Click to edit</span></div>
+    <div id="projList"></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE 2: TENDERS ═══ -->
+<div class="page" id="page-tender">
+  <div class="sec-hd">
+    <div><div class="sec-tt">Tender Management</div><div class="sec-sb">Track bids, deadlines &amp; outcomes across all divisions</div></div>
+    <button class="btn-p" onclick="openTModal()">＋ Add Tender</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="sb"><span class="sb-ico">🔍</span><input type="text" id="srch" placeholder="Search name, client, PIC…" oninput="renderTbl()"></div>
+    <select class="fsel" id="fSt" onchange="renderTbl()">
+      <option value="">All Status</option>
+      <option>Pending</option><option>Submitted</option><option>Won</option><option>Lost</option><option>Withdrawn</option>
+    </select>
+    <select class="fsel" id="fDv" onchange="renderTbl()">
+      <option value="">All Divisions</option>
+      <option>Engineering &amp; Construction</option><option>Interior Design</option>
+      <option>Signage &amp; Wayfinding</option><option>Facility Management</option>
+      <option>Parking Management</option><option>M&amp;E</option>
+    </select>
+    <input type="date" class="fdate" id="fFr" onchange="renderTbl()" title="Deadline from">
+    <input type="date" class="fdate" id="fTo" onchange="renderTbl()" title="Deadline to">
+    <select class="fsel" id="fSo" onchange="renderTbl()">
+      <option value="dl_a">Deadline ↑</option><option value="dl_d">Deadline ↓</option>
+      <option value="vl_d">Value ↓</option><option value="vl_a">Value ↑</option>
+      <option value="nm_a">Name A–Z</option><option value="st_a">Status</option>
+    </select>
+    <button class="btn-ex" onclick="doExport()">⬇ Export CSV</button>
+  </div>
+
+  <div class="twrap">
+    <table>
+      <thead><tr>
+        <th>Tender Name</th><th>Client</th>
+        <th style="text-align:right">Value (RM)</th>
+        <th>Division / PIC</th><th>Deadline</th>
+        <th>Status</th><th>Remarks</th>
+        <th style="width:88px">Actions</th>
+      </tr></thead>
+      <tbody id="tBody"></tbody>
+    </table>
+    <div class="empty" id="emSt" style="display:none">
+      <div class="em-ic">📂</div>
+      <div class="em-tt">No tenders found</div>
+      <div class="em-sb">Try adjusting your search or filters</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE 3: ANALYTICS ═══ -->
+<div class="page" id="page-analytics">
+  <div class="sec-hd">
+    <div><div class="sec-tt">Analytics</div><div class="sec-sb">Tender performance insights &amp; pipeline breakdown</div></div>
+  </div>
+
+  <div class="a-grid">
+    <div class="as"><div class="as-lb">Total Submitted Value</div><div class="as-vl" id="a-sv">—</div><div class="as-sb">Submitted + Won + Lost</div></div>
+    <div class="as"><div class="as-lb">Total Won Value</div><div class="as-vl" style="color:#34C759" id="a-wv">—</div><div class="as-sb">Awarded contracts</div></div>
+    <div class="as"><div class="as-lb">Win Rate</div><div class="as-vl" style="color:#34C759" id="a-wr">—%</div><div class="as-sb">Won ÷ Decided</div></div>
+    <div class="as"><div class="as-lb">Avg Tender Value</div><div class="as-vl" id="a-av">—</div><div class="as-sb">Across all tenders</div></div>
+    <div class="as"><div class="as-lb">Largest Tender</div><div class="as-vl" id="a-mx">—</div><div class="as-sb" id="a-mxn" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div></div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:20px;">
+    <div class="card">
+      <div class="ctit">Win / Loss Trend — Last 12 Months</div>
+      <div class="ctall"><canvas id="cTrend"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctit">Pipeline Value by Division</div>
+      <div class="ctall"><canvas id="cDivBar"></canvas></div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1.7fr;gap:16px;">
+    <div class="card">
+      <div class="ctit">Status Distribution</div>
+      <div class="cw"><canvas id="cPie" style="max-width:188px;max-height:188px;"></canvas></div>
+      <div id="pieLeg" class="legend" style="margin-top:14px;flex-wrap:wrap;"></div>
+    </div>
+    <div class="card">
+      <div class="ctit">Tender Log <span class="ctit-sm">Sorted by last update</span></div>
+      <div id="aLog" style="max-height:280px;overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: TENDER -->
+<div class="overlay" id="tOvl" onclick="bgClose(event,'tOvl','closeTModal')">
+  <div class="modal">
+    <div class="mhd">
+      <div class="mtt" id="tMTT">Add Tender</div>
+      <button class="mcl" onclick="closeTModal()">×</button>
+    </div>
+    <div class="mbd">
+      <input type="hidden" id="t-id">
+      <div class="fg"><label class="fl">Tender Name <span>*</span></label><input class="fi" id="t-nm" placeholder="e.g. Proposed Hospital Refurbishment, Putrajaya"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Client / Employer <span>*</span></label><input class="fi" id="t-cl" placeholder="e.g. JKR Selangor"></div>
+        <div class="fg"><label class="fl">Tender Value (RM) <span>*</span></label><input class="fi" id="t-vl" type="number" placeholder="e.g. 5000000"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Division <span>*</span></label>
+          <select class="fs" id="t-dv">
+            <option value="">Select division…</option>
+            <option>Engineering &amp; Construction</option><option>Interior Design</option>
+            <option>Signage &amp; Wayfinding</option><option>Facility Management</option>
+            <option>Parking Management</option><option>M&amp;E</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">PIC</label><input class="fi" id="t-pc" placeholder="e.g. Ahmad Rizal"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Deadline</label><input class="fi" id="t-dl" type="date"></div>
+        <div class="fg"><label class="fl">Status <span>*</span></label>
+          <select class="fs" id="t-st">
+            <option>Pending</option><option>Submitted</option><option>Won</option><option>Lost</option><option>Withdrawn</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Win/Loss Remarks</label><textarea class="fta" id="t-rm" placeholder="e.g. Awarded at RM4.8M. Closest competitor was 6% higher."></textarea></div>
+      <div class="fg"><label class="fl">Competitor Info</label><textarea class="fta" id="t-co" placeholder="e.g. Competitor A came in 8% lower. Known for aggressive pricing."></textarea></div>
+      <div id="tDelWrap" style="display:none;"><button class="bdel" onclick="deleteTender(document.getElementById('t-id').value)">Delete This Tender</button></div>
+    </div>
+    <div class="mft">
+      <button class="bc" onclick="closeTModal()">Cancel</button>
+      <button class="bs" onclick="saveTender()">Save Tender</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PROJECT -->
+<div class="overlay" id="pOvl" onclick="bgClose(event,'pOvl','closePModal')">
+  <div class="modal">
+    <div class="mhd">
+      <div class="mtt" id="pMTT">Add Project</div>
+      <button class="mcl" onclick="closePModal()">×</button>
+    </div>
+    <div class="mbd">
+      <input type="hidden" id="p-id">
+      <div class="fg"><label class="fl">Project Name <span>*</span></label><input class="fi" id="p-nm" placeholder="e.g. PGU Airport Design &amp; Build"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Division</label>
+          <select class="fs" id="p-dv">
+            <option value="">Select…</option>
+            <option>Engineering &amp; Construction</option><option>Interior Design</option>
+            <option>Signage &amp; Wayfinding</option><option>Facility Management</option>
+            <option>Parking Management</option><option>M&amp;E</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Status</label>
+          <select class="fs" id="p-st">
+            <option>Active</option><option>At-Risk</option><option>Completed</option>
+          </select>
+        </div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Client</label><input class="fi" id="p-cl" placeholder="e.g. JKR Sarawak"></div>
+        <div class="fg"><label class="fl">Contract Value (RM)</label><input class="fi" id="p-vl" type="number" placeholder="e.g. 174000000"></div>
+      </div>
+      <div class="fg">
+        <label class="fl">Progress (%)</label>
+        <div class="rwrap">
+          <input type="range" min="0" max="100" value="0" id="p-pg" oninput="document.getElementById('p-pgv').textContent=this.value+'%'">
+          <span class="rval" id="p-pgv">0%</span>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">Notes / Remarks</label><textarea class="fta" id="p-nt" placeholder="e.g. CPC target Sep 2026. LAD exposure RM26K/day."></textarea></div>
+      <div id="pDelWrap" style="display:none;"><button class="bdel" onclick="delProject()">Delete This Project</button></div>
+    </div>
+    <div class="mft">
+      <button class="bc" onclick="closePModal()">Cancel</button>
+      <button class="bs" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+// STATE & CONSTANTS
+// ══════════════════════════════════════════
+const SK_T='ops_tenders_v1', SK_P='ops_projects_v1';
+let T=[], P=[];
+let cDonut=null, cPipe=null, cTrend=null, cDivBar=null, cPie=null;
+const DIVS=['Engineering & Construction','Interior Design','Signage & Wayfinding','Facility Management','Parking Management','M&E'];
+const DCOLS=['#007AFF','#FF9500','#AF52DE','#34C759','#FF3B30','#FF6B35'];
+
+// ══════════════════════════════════════════
+// SEED DATA
+// ══════════════════════════════════════════
+function seedT(){
+  return [
+    {id:uid(),name:'Proposed Hospital Block Renovation, Putrajaya',client:'JKR Putrajaya',value:18500000,div:'Engineering & Construction',pic:'Ahmad Rizal',deadline:'2025-11-15',status:'Won',remarks:'Awarded at RM18.2M. Closest competitor 4% higher.',competitor:'Bina Murni JV — came in RM19.2M.',createdAt:'2025-09-01T08:00:00.000Z',updatedAt:'2025-11-20T10:00:00.000Z'},
+    {id:uid(),name:'Medical Equipment Supply – 5 States (KKM)',client:'Kementerian Kesihatan Malaysia',value:3000000000,div:'Engineering & Construction',pic:'Syamil',deadline:'2026-06-30',status:'Submitted',remarks:'Large consortium bid. Compliance review ongoing.',competitor:'',createdAt:'2026-01-10T08:00:00.000Z',updatedAt:'2026-04-01T08:00:00.000Z'},
+    {id:uid(),name:'Wayfinding & Signage – KLIA2 Terminal',client:'Malaysia Airports Holdings',value:2200000,div:'Signage & Wayfinding',pic:'Ridhwan',deadline:'2026-02-28',status:'Lost',remarks:'Lost on price. Winner came in 12% lower.',competitor:'IkonSign Sdn Bhd — aggressive pricing at RM1.95M.',createdAt:'2025-12-01T08:00:00.000Z',updatedAt:'2026-03-05T08:00:00.000Z'},
+    {id:uid(),name:'Parking Management System – Setia Alam',client:'SP Setia Bhd',value:850000,div:'Parking Management',pic:'Nurul Syahira',deadline:'2025-12-10',status:'Won',remarks:'Direct award after negotiation. Mobilisation Q1 2026.',competitor:'',createdAt:'2025-10-15T08:00:00.000Z',updatedAt:'2026-01-05T08:00:00.000Z'},
+    {id:uid(),name:'M&E Upgrade – GLC HQ Tower, Putrajaya',client:'Putrajaya Holdings',value:4100000,div:'M&E',pic:'Syamzari',deadline:'2026-07-15',status:'Pending',remarks:'',competitor:'',createdAt:'2026-03-01T08:00:00.000Z',updatedAt:'2026-03-01T08:00:00.000Z'},
+    {id:uid(),name:'Interior Fit-Out – Maybank Branch Renovation',client:'Maybank Berhad',value:1200000,div:'Interior Design',pic:'Sofea',deadline:'2026-05-20',status:'Submitted',remarks:'ITB issued. Awaiting evaluation.',competitor:'',createdAt:'2026-02-15T08:00:00.000Z',updatedAt:'2026-04-10T08:00:00.000Z'},
+    {id:uid(),name:'Signage & Wayfinding – Penang International Airport',client:'Malaysia Airports Holdings',value:1800000,div:'Signage & Wayfinding',pic:'Ridhwan',deadline:'2026-05-12',status:'Pending',remarks:'Submission in 5 days. Documents 90% ready.',competitor:'',createdAt:'2026-03-20T08:00:00.000Z',updatedAt:'2026-05-01T08:00:00.000Z'},
+    {id:uid(),name:'Facility Management – KLCC Podium Block',client:'KLCC Property Holdings',value:6500000,div:'Facility Management',pic:'Hazwan',deadline:'2026-01-30',status:'Withdrawn',remarks:'Scope changed by client. Re-tender expected Q3 2026.',competitor:'',createdAt:'2025-11-01T08:00:00.000Z',updatedAt:'2026-02-01T08:00:00.000Z'},
+  ];
+}
+function seedP(){
+  return [
+    {id:uid(),name:'PGU Airport Design & Build',client:'JKR Sarawak',div:'Engineering & Construction',status:'At-Risk',value:174000000,progress:45,notes:'CPC target Sep 2026. LAD exposure RM26K/day. IPC cashflow tight.',createdAt:'2024-06-01T08:00:00.000Z',updatedAt:'2026-04-15T08:00:00.000Z'},
+    {id:uid(),name:'KLIA2 Wayfinding Package',client:'Malaysia Airports Holdings',div:'Signage & Wayfinding',status:'Active',value:2200000,progress:70,notes:'On schedule. Shop drawings approved. Installation phase.',createdAt:'2025-03-01T08:00:00.000Z',updatedAt:'2026-04-20T08:00:00.000Z'},
+    {id:uid(),name:'Setia Alam Parking Management',client:'SP Setia Bhd',div:'Parking Management',status:'Active',value:850000,progress:85,notes:'Mobilisation complete. System commissioning in progress.',createdAt:'2026-01-15T08:00:00.000Z',updatedAt:'2026-04-28T08:00:00.000Z'},
+    {id:uid(),name:'GLC Interior Reno – Phase 1',client:'Putrajaya Holdings',div:'Interior Design',status:'Completed',value:3200000,progress:100,notes:'Handed over Jan 2026. DLP ongoing until Jan 2027.',createdAt:'2025-04-01T08:00:00.000Z',updatedAt:'2026-01-20T08:00:00.000Z'},
+    {id:uid(),name:'Bank Branch M&E Upgrade',client:'Maybank Berhad',div:'M&E',status:'Active',value:1100000,progress:60,notes:'Wiring works 60% complete. Mechanical ongoing.',createdAt:'2025-10-01T08:00:00.000Z',updatedAt:'2026-04-30T08:00:00.000Z'},
+    {id:uid(),name:'Petronas Twin Towers Signage Refresh',client:'KLCC Property Holdings',div:'Signage & Wayfinding',status:'Active',value:4800000,progress:25,notes:'Design phase. Client review pending approval of schematic design.',createdAt:'2026-02-01T08:00:00.000Z',updatedAt:'2026-04-15T08:00:00.000Z'},
+  ];
+}
+
+// ══════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+function fRM(v){
+  const n=parseFloat(v)||0;
+  if(n>=1e9) return 'RM '+(n/1e9).toFixed(2)+'B';
+  if(n>=1e6) return 'RM '+(n/1e6).toFixed(2)+'M';
+  if(n>=1e3) return 'RM '+(n/1e3).toFixed(0)+'K';
+  return 'RM '+n.toLocaleString('en-MY');
+}
+function fRMs(v){
+  const n=parseFloat(v)||0;
+  if(n>=1e9) return (n/1e9).toFixed(1)+'B';
+  if(n>=1e6) return (n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return (n/1e3).toFixed(0)+'K';
+  return n.toLocaleString('en-MY');
+}
+function fDate(d){
+  if(!d) return '—';
+  return new Date(d+'T00:00:00').toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'});
+}
+function daysLeft(d){
+  if(!d) return null;
+  return Math.ceil((new Date(d+'T00:00:00')-new Date())/86400000);
+}
+function isOD(d,s){return d&&(s==='Pending'||s==='Submitted')&&daysLeft(d)<0;}
+function isUp(d,s){const dl=daysLeft(d);return d&&(s==='Pending'||s==='Submitted')&&dl!==null&&dl>=0&&dl<=30;}
+function pillC(s){return({Active:'active','At-Risk':'at-risk',Completed:'completed',Submitted:'submitted',Won:'won',Lost:'lost',Pending:'pending',Withdrawn:'withdrawn'})[s]||'pending';}
+
+function toast(msg,t=''){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast show '+t;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.className='toast',3000);
+}
+
+function doExport(){
+  const {fil}=getFiltered();
+  const h=['Tender Name','Client','Value (RM)','Division','PIC','Deadline','Status','Remarks','Competitor'];
+  const rows=fil.map(t=>[`"${t.name}"`,`"${t.client||''}"`,t.value||0,`"${t.div||''}"`,`"${t.pic||''}"`,t.deadline||'',t.status,`"${(t.remarks||'').replace(/"/g,'""')}"`,`"${(t.competitor||'').replace(/"/g,'""')}"`]);
+  const csv=[h.join(','),...rows.map(r=>r.join(','))].join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='tenders_'+new Date().toISOString().slice(0,10).replace(/-/g,'')+'.csv';
+  a.click(); toast('CSV exported ✓','ok');
+}
+
+// ══════════════════════════════════════════
+// STORAGE
+// ══════════════════════════════════════════
+function save(){localStorage.setItem(SK_T,JSON.stringify(T));localStorage.setItem(SK_P,JSON.stringify(P));}
+function load(){
+  const t=localStorage.getItem(SK_T), p=localStorage.getItem(SK_P);
+  T=t?JSON.parse(t):seedT(); P=p?JSON.parse(p):seedP();
+  if(!t) localStorage.setItem(SK_T,JSON.stringify(T));
+  if(!p) localStorage.setItem(SK_P,JSON.stringify(P));
+}
+
+// ══════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════
+function gotoPage(pg){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+pg).classList.add('active');
+  document.getElementById('tab-'+pg).classList.add('active');
+  if(pg==='director') refreshDir();
+  if(pg==='analytics') buildAnalytics();
+}
+
+// ══════════════════════════════════════════
+// DIRECTOR PAGE
+// ══════════════════════════════════════════
+function refreshDir(){
+  const active=P.filter(p=>p.status==='Active').length;
+  const risk=P.filter(p=>p.status==='At-Risk').length;
+  const done=P.filter(p=>p.status==='Completed').length;
+  document.getElementById('k-active').textContent=active;
+  document.getElementById('k-risk').textContent=risk;
+  document.getElementById('k-done').textContent=done;
+  document.getElementById('totPrj').textContent=P.length;
+  document.getElementById('k-dead').textContent=T.filter(t=>isUp(t.deadline,t.status)).length;
+
+  const pv=T.reduce((s,t)=>s+(parseFloat(t.value)||0),0);
+  document.getElementById('k-pipe').textContent=fRM(pv);
+
+  const won=T.filter(t=>t.status==='Won').length, lost=T.filter(t=>t.status==='Lost').length;
+  const dec=won+lost, wr=dec>0?Math.round(won/dec*100):0;
+  document.getElementById('s-wr').textContent=wr+'%';
+  document.getElementById('s-tot').textContent=T.length;
+  document.getElementById('s-val').textContent='RM '+fRMs(pv);
+
+  buildDonut(active,risk,done);
+  buildPipeChart();
+  buildDivTbl();
+  buildProjList();
+  checkAlerts();
+}
+
+function buildDonut(a,r,d){
+  const ctx=document.getElementById('cDonut').getContext('2d');
+  if(cDonut) cDonut.destroy();
+  const tot=a+r+d||1;
+  cDonut=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:['Active','At-Risk','Completed'],datasets:[{data:[a,r,d],backgroundColor:['#007AFF','#FF9500','#34C759'],borderWidth:0,hoverOffset:6}]},
+    options:{cutout:'74%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw} (${Math.round(c.raw/tot*100)}%)`}}},animation:{duration:700}}
+  });
+}
+
+function buildPipeChart(){
+  const ctx=document.getElementById('cPipe').getContext('2d');
+  if(cPipe) cPipe.destroy();
+  const counts=['Submitted','Won','Lost','Pending','Withdrawn'].map(s=>T.filter(t=>t.status===s).length);
+  cPipe=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['Submitted','Won','Lost','Pending','Withdrawn'],
+      datasets:[{data:counts,backgroundColor:['#007AFF','#34C759','#FF3B30','#FF9500','#AF52DE'],borderRadius:5,borderSkipped:false}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.raw} tender${c.raw!==1?'s':''}`}}},scales:{x:{grid:{display:false},ticks:{stepSize:1,font:{size:10}}},y:{grid:{display:false},ticks:{font:{size:11,weight:'500'}}}},animation:{duration:600}}
+  });
+}
+
+function buildDivTbl(){
+  const el=document.getElementById('divTbl');
+  const rows=DIVS.map((div,i)=>{
+    const ap=P.filter(p=>p.div===div&&p.status!=='Completed').length;
+    const tc=T.filter(t=>t.div===div).length;
+    const tv=T.filter(t=>t.div===div).reduce((s,t)=>s+(parseFloat(t.value)||0),0);
+    return {div,ap,tc,tv};
+  }).filter(r=>r.ap>0||r.tc>0);
+  if(!rows.length){el.innerHTML='<div style="font-size:12px;color:var(--gr);text-align:center;padding:24px 0;">No data yet</div>';return;}
+  el.innerHTML=`<table class="dtbl"><thead><tr><th>Division</th><th>Active</th><th>Tenders</th><th>Value</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr data-div="${r.div.replace(/&/g,'&amp;')}" onclick="fltByDiv(this.dataset.div)">
+      <td><div class="dn">${r.div.replace(/&/g,'&amp;')}</div></td>
+      <td>${r.ap}</td><td>${r.tc}</td>
+      <td style="font-family:var(--disp);font-size:11.5px;font-weight:700;">${fRMs(r.tv)}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function fltByDiv(div){gotoPage('tender');document.getElementById('fDv').value=div;renderTbl();}
+
+function buildProjList(){
+  const el=document.getElementById('projList');
+  if(!P.length){el.innerHTML='<div class="empty" style="padding:24px"><div class="em-ic">🏗️</div><div class="em-tt">No projects yet</div><div class="em-sb"><a href="#" onclick="openProjModal(null);return false;" style="color:var(--cr)">+ Add first project</a></div></div>';return;}
+  const sorted=[...P].sort((a,b)=>({'At-Risk':0,'Active':1,'Completed':2}[a.status]||1)-({'At-Risk':0,'Active':1,'Completed':2}[b.status]||1));
+  el.innerHTML=sorted.map(p=>{
+    const pct=Math.min(100,Math.max(0,parseInt(p.progress)||0));
+    const bc=p.status==='Completed'?'#34C759':p.status==='At-Risk'?'#FF9500':'#007AFF';
+    return `<div class="pr" onclick="openProjModal('${p.id}')">
+      <div style="flex:1;min-width:0;">
+        <div class="pn">${p.name}</div>
+        <div class="pm">${p.div||'—'} · ${p.client||'—'}</div>
+        <div class="pg-bg"><div class="pg-bar" style="width:${pct}%;background:${bc};"></div></div>
+        <div class="pg-lbl">${pct}% complete</div>
+      </div>
+      <div class="pr-r">
+        <span class="pv">${fRM(p.value)}</span>
+        <span class="pill ${pillC(p.status)}">${p.status}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function checkAlerts(){
+  const od=T.filter(t=>isOD(t.deadline,t.status));
+  const b=document.getElementById('alertBanner');
+  if(od.length){
+    b.classList.add('on');
+    document.getElementById('alertItems').innerHTML=od.map(t=>`${t.name} — deadline ${fDate(t.deadline)} (${Math.abs(daysLeft(t.deadline))} days overdue)`).join('<br>');
+  } else {b.classList.remove('on');}
+}
+
+// ══════════════════════════════════════════
+// TENDER TABLE
+// ══════════════════════════════════════════
+function getFiltered(){
+  const q=document.getElementById('srch').value.toLowerCase();
+  const fs=document.getElementById('fSt').value;
+  const fd=document.getElementById('fDv').value;
+  const ff=document.getElementById('fFr').value;
+  const ft=document.getElementById('fTo').value;
+  const so=document.getElementById('fSo').value;
+  let fil=T.filter(t=>{
+    const mq=!q||[t.name,t.client,t.pic,t.div,t.remarks].some(v=>v&&v.toLowerCase().includes(q));
+    return mq&&(!fs||t.status===fs)&&(!fd||t.div===fd)&&(!ff||t.deadline>=ff)&&(!ft||t.deadline<=ft);
+  });
+  switch(so){
+    case 'dl_a':fil.sort((a,b)=>(a.deadline||'9999')>(b.deadline||'9999')?1:-1);break;
+    case 'dl_d':fil.sort((a,b)=>(a.deadline||'0000')<(b.deadline||'0000')?1:-1);break;
+    case 'vl_d':fil.sort((a,b)=>(b.value||0)-(a.value||0));break;
+    case 'vl_a':fil.sort((a,b)=>(a.value||0)-(b.value||0));break;
+    case 'nm_a':fil.sort((a,b)=>a.name.localeCompare(b.name));break;
+    case 'st_a':fil.sort((a,b)=>a.status.localeCompare(b.status));break;
+  }
+  return {fil};
+}
+
+function renderTbl(){
+  const {fil}=getFiltered();
+  const tb=document.getElementById('tBody'), em=document.getElementById('emSt');
+  if(!fil.length){tb.innerHTML='';em.style.display='block';return;}
+  em.style.display='none';
+  tb.innerHTML=fil.map(t=>{
+    const dl=daysLeft(t.deadline);
+    let dlCls='',dlSfx='';
+    if(isOD(t.deadline,t.status)){dlCls='dl-r';dlSfx=' ⚠️';}
+    else if(t.deadline&&(t.status==='Pending'||t.status==='Submitted')&&dl!==null&&dl<=7&&dl>=0){dlCls='dl-a';dlSfx=' ⚡';}
+    return `<tr>
+      <td class="tdn" title="${t.name}">${t.name}</td>
+      <td class="tdc" title="${t.client||''}">${t.client||'—'}</td>
+      <td class="tdv">${fRM(t.value)}</td>
+      <td><div style="font-size:13px;font-weight:500;">${t.div||'—'}</div><div style="font-size:11px;color:var(--gr);">${t.pic||''}</div></td>
+      <td><span class="${dlCls}">${fDate(t.deadline)}${dlSfx}</span></td>
+      <td><span class="pill ${pillC(t.status)}">${t.status}</span></td>
+      <td class="tdr" title="${t.remarks||''}">${t.remarks||'—'}</td>
+      <td><div style="display:flex;gap:4px;"><button class="abt abt-e" onclick="openTModal('${t.id}')">Edit</button><button class="abt abt-d" onclick="deleteTender('${t.id}')">Del</button></div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// TENDER MODAL
+// ══════════════════════════════════════════
+function openTModal(id=null){
+  clrTForm();
+  if(id){
+    const t=T.find(x=>x.id===id); if(!t) return;
+    document.getElementById('tMTT').textContent='Edit Tender';
+    document.getElementById('t-id').value=t.id;
+    document.getElementById('t-nm').value=t.name;
+    document.getElementById('t-cl').value=t.client;
+    document.getElementById('t-vl').value=t.value;
+    document.getElementById('t-dv').value=t.div;
+    document.getElementById('t-pc').value=t.pic;
+    document.getElementById('t-dl').value=t.deadline;
+    document.getElementById('t-st').value=t.status;
+    document.getElementById('t-rm').value=t.remarks;
+    document.getElementById('t-co').value=t.competitor||'';
+    document.getElementById('tDelWrap').style.display='block';
+  } else {
+    document.getElementById('tMTT').textContent='Add New Tender';
+    document.getElementById('tDelWrap').style.display='none';
+  }
+  document.getElementById('tOvl').classList.add('open');
+}
+function closeTModal(){document.getElementById('tOvl').classList.remove('open');}
+function clrTForm(){
+  ['t-nm','t-cl','t-vl','t-pc','t-rm','t-co'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('t-dv').value='';
+  document.getElementById('t-st').value='Pending';
+  document.getElementById('t-dl').value='';
+  document.getElementById('t-id').value='';
+}
+function saveTender(){
+  const nm=document.getElementById('t-nm').value.trim();
+  const cl=document.getElementById('t-cl').value.trim();
+  const vl=document.getElementById('t-vl').value;
+  const dv=document.getElementById('t-dv').value;
+  const st=document.getElementById('t-st').value;
+  if(!nm||!cl||!vl||!dv||!st){toast('Fill in all required fields (*)','err');return;}
+  const now=new Date().toISOString();
+  const d={name:nm,client:cl,value:parseFloat(vl),div:dv,pic:document.getElementById('t-pc').value.trim(),deadline:document.getElementById('t-dl').value,status:st,remarks:document.getElementById('t-rm').value.trim(),competitor:document.getElementById('t-co').value.trim(),updatedAt:now};
+  const eid=document.getElementById('t-id').value;
+  if(eid){const i=T.findIndex(x=>x.id===eid);if(i>-1)T[i]={id:eid,createdAt:T[i].createdAt||now,...d};toast('Tender updated ✓','ok');}
+  else{T.unshift({id:uid(),createdAt:now,...d});toast('Tender added ✓','ok');}
+  save();closeTModal();renderTbl();refreshDir();
+}
+function deleteTender(id){
+  if(!confirm('Delete this tender? This cannot be undone.')) return;
+  T=T.filter(t=>t.id!==id);
+  save();closeTModal();renderTbl();refreshDir();toast('Tender deleted');
+}
+
+// ══════════════════════════════════════════
+// PROJECT MODAL
+// ══════════════════════════════════════════
+function openProjModal(id=null){
+  clrPForm();
+  document.getElementById('pDelWrap').style.display='none';
+  if(id){
+    const p=P.find(x=>x.id===id); if(!p) return;
+    document.getElementById('pMTT').textContent='Edit Project';
+    document.getElementById('p-id').value=p.id;
+    document.getElementById('p-nm').value=p.name;
+    document.getElementById('p-dv').value=p.div||'';
+    document.getElementById('p-st').value=p.status;
+    document.getElementById('p-cl').value=p.client||'';
+    document.getElementById('p-vl').value=p.value||'';
+    document.getElementById('p-nt').value=p.notes||'';
+    const pg=parseInt(p.progress)||0;
+    document.getElementById('p-pg').value=pg;
+    document.getElementById('p-pgv').textContent=pg+'%';
+    document.getElementById('pDelWrap').style.display='block';
+  } else {
+    document.getElementById('pMTT').textContent='Add Project';
+  }
+  document.getElementById('pOvl').classList.add('open');
+}
+function closePModal(){document.getElementById('pOvl').classList.remove('open');}
+function clrPForm(){
+  ['p-nm','p-cl','p-nt'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('p-dv').value='';
+  document.getElementById('p-st').value='Active';
+  document.getElementById('p-vl').value='';
+  document.getElementById('p-pg').value='0';
+  document.getElementById('p-pgv').textContent='0%';
+  document.getElementById('p-id').value='';
+}
+function saveProject(){
+  const nm=document.getElementById('p-nm').value.trim();
+  if(!nm){toast('Project name is required','err');return;}
+  const now=new Date().toISOString();
+  const d={name:nm,div:document.getElementById('p-dv').value,status:document.getElementById('p-st').value,client:document.getElementById('p-cl').value.trim(),value:parseFloat(document.getElementById('p-vl').value)||0,progress:parseInt(document.getElementById('p-pg').value)||0,notes:document.getElementById('p-nt').value.trim(),updatedAt:now};
+  const eid=document.getElementById('p-id').value;
+  if(eid){const i=P.findIndex(x=>x.id===eid);if(i>-1)P[i]={id:eid,createdAt:P[i].createdAt||now,...d};toast('Project updated ✓','ok');}
+  else{P.unshift({id:uid(),createdAt:now,...d});toast('Project added ✓','ok');}
+  save();closePModal();refreshDir();
+}
+function delProject(){
+  const id=document.getElementById('p-id').value;
+  if(!id||!confirm('Delete this project? This cannot be undone.')) return;
+  P=P.filter(p=>p.id!==id);
+  save();closePModal();refreshDir();toast('Project deleted');
+}
+
+// ══════════════════════════════════════════
+// ANALYTICS
+// ══════════════════════════════════════════
+function buildAnalytics(){
+  const won=T.filter(t=>t.status==='Won');
+  const dec=T.filter(t=>t.status==='Won'||t.status==='Lost');
+  const sub=T.filter(t=>['Submitted','Won','Lost'].includes(t.status));
+  const wonV=won.reduce((s,t)=>s+(parseFloat(t.value)||0),0);
+  const subV=sub.reduce((s,t)=>s+(parseFloat(t.value)||0),0);
+  const wr=dec.length>0?Math.round(won.length/dec.length*100):0;
+  const avg=T.length>0?T.reduce((s,t)=>s+(parseFloat(t.value)||0),0)/T.length:0;
+  const mx=T.reduce((m,t)=>(!m||parseFloat(t.value)>parseFloat(m.value))?t:m,null);
+  document.getElementById('a-sv').textContent=fRM(subV);
+  document.getElementById('a-wv').textContent=fRM(wonV);
+  document.getElementById('a-wr').textContent=wr+'%';
+  document.getElementById('a-av').textContent=fRM(avg);
+  document.getElementById('a-mx').textContent=mx?fRM(mx.value):'—';
+  document.getElementById('a-mxn').textContent=mx?(mx.name.length>38?mx.name.slice(0,36)+'…':mx.name):'—';
+  buildTrendChart(); buildDivBarChart(); buildStatusPie(); buildALog();
+}
+
+function buildTrendChart(){
+  const ctx=document.getElementById('cTrend').getContext('2d');
+  if(cTrend) cTrend.destroy();
+  const now=new Date();
+  const months=Array.from({length:12},(_,i)=>{
+    const d=new Date(now.getFullYear(),now.getMonth()-11+i,1);
+    return{key:`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`,label:d.toLocaleDateString('en-MY',{month:'short',year:'2-digit'})};
+  });
+  cTrend=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:months.map(m=>m.label),
+      datasets:[
+        {label:'Won',data:months.map(m=>T.filter(t=>t.status==='Won'&&t.deadline&&t.deadline.startsWith(m.key)).length),borderColor:'#34C759',backgroundColor:'rgba(52,199,89,.1)',tension:.35,fill:true,pointRadius:4,pointBackgroundColor:'#34C759'},
+        {label:'Lost',data:months.map(m=>T.filter(t=>t.status==='Lost'&&t.deadline&&t.deadline.startsWith(m.key)).length),borderColor:'#FF3B30',backgroundColor:'rgba(255,59,48,.08)',tension:.35,fill:true,pointRadius:4,pointBackgroundColor:'#FF3B30'}
+      ]
+    },
+    options:{plugins:{legend:{labels:{font:{size:12},boxWidth:12}}},scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{grid:{color:'rgba(0,0,0,.05)'},ticks:{stepSize:1,font:{size:11}},beginAtZero:true}},animation:{duration:700}}
+  });
+}
+
+function buildDivBarChart(){
+  const ctx=document.getElementById('cDivBar').getContext('2d');
+  if(cDivBar) cDivBar.destroy();
+  const data=DIVS.map((d,i)=>({d,v:T.filter(t=>t.div===d).reduce((s,t)=>s+(parseFloat(t.value)||0),0),c:DCOLS[i]})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  cDivBar=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:data.map(x=>x.d.length>18?x.d.slice(0,16)+'…':x.d),
+      datasets:[{data:data.map(x=>x.v),backgroundColor:data.map(x=>x.c),borderRadius:5,borderSkipped:false}]
+    },
+    options:{indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fRM(c.raw)}`}}},scales:{x:{grid:{color:'rgba(0,0,0,.04)'},ticks:{font:{size:10},callback:v=>fRMs(v)}},y:{grid:{display:false},ticks:{font:{size:10}}}},animation:{duration:700}}
+  });
+}
+
+function buildStatusPie(){
+  const ctx=document.getElementById('cPie').getContext('2d');
+  if(cPie) cPie.destroy();
+  const sts=['Pending','Submitted','Won','Lost','Withdrawn'];
+  const cols=['#FF9500','#007AFF','#34C759','#FF3B30','#AF52DE'];
+  const cnts=sts.map(s=>T.filter(t=>t.status===s).length);
+  cPie=new Chart(ctx,{
+    type:'doughnut',
+    data:{labels:sts,datasets:[{data:cnts,backgroundColor:cols,borderWidth:0,hoverOffset:6}]},
+    options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.label}: ${c.raw}`}}},animation:{duration:700}}
+  });
+  document.getElementById('pieLeg').innerHTML=sts.map((s,i)=>`<div class="leg"><div class="ldot" style="background:${cols[i]}"></div>${s} (${cnts[i]||0})</div>`).join('');
+}
+
+function buildALog(){
+  const el=document.getElementById('aLog');
+  const sorted=[...T].sort((a,b)=>(b.updatedAt||'')>(a.updatedAt||'')?1:-1);
+  if(!sorted.length){el.innerHTML='<div class="empty" style="padding:20px"><div class="em-tt">No tenders yet</div></div>';return;}
+  el.innerHTML=sorted.map(t=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd);">
+      <span class="pill ${pillC(t.status)}" style="flex-shrink:0;">${t.status}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.name}</div>
+        <div style="font-size:11px;color:var(--gr);">${t.client||'—'} · ${fRM(t.value)}</div>
+      </div>
+      <div style="font-size:11px;color:var(--gr);white-space:nowrap;">${fDate(t.deadline)}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════
+// MODAL CLOSE ON BACKGROUND CLICK
+// ══════════════════════════════════════════
+function bgClose(e,id,fn){if(e.target.id===id)window[fn]();}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+document.getElementById('hDate').textContent=new Date().toLocaleDateString('en-MY',{weekday:'short',day:'numeric',month:'long',year:'numeric'});
+load();
+refreshDir();
+renderTbl();
+</script>
+</body>
+</html>
